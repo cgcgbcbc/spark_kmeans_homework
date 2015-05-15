@@ -1,6 +1,3 @@
-/**
- * Created by yqh on 2015/5/15.
- */
 package cn.edu.tsinghua
 
 import java.io.{File, PrintWriter}
@@ -86,51 +83,6 @@ object MyKMeans {
     val pointWithIndex = closest.map(closetToString).collect()
     pointWithIndex.foreach(x => writer.write(x))
     writer.close()
-/*
-String s
-for ( i : point) {
-  s += i;
-  s += " ";
-}
-
-* (index, (point, 1))=> [(p,index),...]
-* */
-    //out.close()
     sc.stop()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-/*
-  def closestPoint(point:Vector, centers: Array[Vector]) : Int = {
-    var bestIndex = 0
-    var closest = Double.PositiveInfinity
-
-    for(i <- 0 until centers.length()){
-      val tempDist = Vectors.sqdist(point, centers(i));
-      if(tempDist < closest){
-        closest = tempDist
-        bestIndex = i
-      }
-
-    }
-  }
-
-*/
 }
 

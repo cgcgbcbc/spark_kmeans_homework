@@ -1,7 +1,5 @@
 package cn.edu.tsinghua
 
-import java.io.{File, PrintWriter}
-
 import breeze.linalg.{DenseVector, Vector, squaredDistance}
 import org.apache.spark._
 
@@ -19,7 +17,7 @@ object MyKMeans {
 
   def closetToString(c: (Int, (Vector[Double], Int))): String = {
     var s = ""
-    c._2._1.foreach { x=>
+    c._2._1.foreach { x =>
       s += x
       s += " "
     }
@@ -44,45 +42,45 @@ object MyKMeans {
   }
 
 
-  def main(args: Array[String]): Unit =
-  {
+  def main(args: Array[String]): Unit = {
+    System.setProperty("HADOOP_USER_NAME", "root")
     val conf = new SparkConf().setAppName("KMeans").setMaster("local")
     val sc = new SparkContext(conf)
-    val file = sc.textFile("src/main/resources/test.txt")
-   // val out = new PrintWriter("result.txt")
+    val file = sc.textFile("hdfs://hadoop.node.lab.mu:9000/user/old/test.txt")
+    // val out = new PrintWriter("result.txt")
     val data = file.map(parseVector).cache()
 
     val kPoints = data.takeSample(withReplacement = false, numClusters, 42)
     var tempDist = 1.0
 
-    var closest = data.map(p => (0,(p,1)))
+    var closest = data.map(p => (0, (p, 1)))
     // val data = file.map(_.split(' ').map(_.toDouble))
-    while(tempDist > convergeDist)
-    {
-      closest = data.map(p => (closestPoint(p,kPoints),(p,1)))
+    while (tempDist > convergeDist) {
+      closest = data.map(p => (closestPoint(p, kPoints), (p, 1)))
 
-      val pointStates = closest.reduceByKey{
-        case((p1,c1),(p2,c2)) => (p1+p2, c1+c2)
+      val pointStates = closest.reduceByKey {
+        case ((p1, c1), (p2, c2)) => (p1 + p2, c1 + c2)
       }
-      val newPoints = pointStates.map {pair =>
-        (pair._1, pair._2._1 * (1.0 / pair._2._2))}.collectAsMap()
+      val newPoints = pointStates.map { pair =>
+        (pair._1, pair._2._1 * (1.0 / pair._2._2))
+      }.collectAsMap()
 
       tempDist = 0.0
-      for(i <-0 until numClusters){
-        tempDist += squaredDistance(kPoints(i),newPoints(i))
+      for (i <- 0 until numClusters) {
+        tempDist += squaredDistance(kPoints(i), newPoints(i))
       }
-      for(newP <- newPoints){
+      for (newP <- newPoints) {
         kPoints(newP._1) = newP._2
       }
-      println("Finish iteration(delta = "+ tempDist+")")
+      println("Finish iteration(delta = " + tempDist + ")")
 
     }
     println("Final centers: ")
     kPoints.foreach(println)
-    val writer = new PrintWriter(new File("output.txt" ))
-    val pointWithIndex = closest.map(closetToString).collect()
-    pointWithIndex.foreach(x => writer.write(x))
-    writer.close()
+    val pointWithIndex = closest.map(closetToString)
+    pointWithIndex.saveAsTextFile("hdfs://hadoop.node.lab.mu:9000/user/old/result.txt")
     sc.stop()
+  }
 }
+
 
